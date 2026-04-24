@@ -63,7 +63,7 @@ SELECT /*( FLAN.VALORDESCONTO + FLAN.VALOROP3 )                                 
                     '<li>Valor Original: <s> R$ ' + 
                         CAST(
 					        CASE
-					            WHEN FLAN.STATUSLAN = 0  -- corrigido aqui
+					            WHEN FLAN.STATUSLAN = 0 
 					                 AND CAST(GETDATE() - DATAVENCIMENTO AS INT) > 0 
 					            THEN CAST(
 					                (FLAN.VALORORIGINAL +
@@ -196,7 +196,6 @@ WHERE  FLAN.PAGREC = 1
        AND FLAN.DATAVENCIMENTO >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
        AND FLAN.DATAVENCIMENTO <= GETDATE() 
 >>>>>>> 5993645 (Ajustado)
-/*and FLAN.VALORBAIXADO - ( FLAN.VALORORIGINAL - (FLAN.VALORDESCONTO + FLAN.VALOROP3) ) < 0*/
 ORDER  BY SCONTRATO.CODCOLIGADA,
           SCONTRATO.IDPERLET,
           SCONTRATO.CODCONTRATO,

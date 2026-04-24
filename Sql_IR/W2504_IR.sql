@@ -84,18 +84,8 @@ FROM   (SELECT GIMAGEM.IMAGEM                                                  A
                AND FLAN.CODAPLICACAO = 'S'
                AND FLAN.CODCOlIGADA = :$CODCOLIGADA
                AND scontrato.codfilial = :P_CODFILIAL
-<<<<<<< HEAD
-               /*and FLAN.DATAVENCIMENTO >= :P_DATA_INI
-                 and FLAN.DATAVENCIMENTO <= :P_DATA_FIM */
-               AND FLAN.DATABAIXA BETWEEN DATEFROMPARTS(YEAR(GETDATE()), 1, 1) AND GETDATE()               
-              /*
-               and FLAN.MESDECOMPETENCIA >= :P_DATA_INI
-               and FLAN.MESDECOMPETENCIA <= :P_DATA_FIM
-               */
-=======
                AND FLAN.DATABAIXA >= DATEFROMPARTS(YEAR(GETDATE()),1,1)
                AND FLAN.DATABAIXA <= GETDATE()            
->>>>>>> 5993645 (Ajustado)
                AND ( SSERVICO.NOME LIKE '%Mensalidade%'
                       OR SSERVICO.NOME LIKE '%Global%'
                       OR SSERVICO.NOME LIKE '%Técnico%'
@@ -130,10 +120,6 @@ FROM   (SELECT GIMAGEM.IMAGEM                                                  A
                       OR SSERVICO.NOME LIKE '%Férias%'
                       OR SSERVICO.NOME LIKE '%Livro%' )
                AND FCFO.NOME LIKE :P_NOME_RESP
-               /*
-               and not FCFO.CGCCFO like '%999.99%'
-               and (SSERVICO.NOME like '%Técnico%')
-               */
                AND ( NOT FLAN.HISTORICO LIKE 'Acordo:%'
                      AND NOT FLAN.HISTORICO LIKE 'Parcelamento:%' )
                AND ( FLAN.VALORORIGINAL - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) ) > 0) AS q
