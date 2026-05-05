@@ -1,52 +1,8 @@
-SELECT /*( FLAN.VALORDESCONTO + FLAN.VALOROP3 )                                                                                  AS VALORDESCONTO,
-       FLAN.VALORORIGINAL - ( FLAN.VALORORIGINAL - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) )                                    AS LIQUIDO,
-       FLAN.VALORBAIXADO                                                                                                       AS VALOR_BAIXADO,
-       FLAN.VALORBAIXADO - ( FLAN.VALORORIGINAL - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) )                                     AS DIFERENCA,
-       ( FLAN.VALORORIGINAL
-         + FLAN.VALORACRESCIMOACORDO
-         + FLAN.VALORJUROSACORDO - FLAN.VALORDESCONTOACORDO )                                                                  AS VALOR_AcorDO,
-       FLAN.DATABAIXA,
-       FLAN.DATAPAG,
-       CASE
-         WHEN FLAN.STATUSLAN IN ( 0 Em Aberto ) THEN Cast(Cast(Getdate() AS DATETIME) - DATAVENCIMENTO AS INTEGER)
-         ELSE Cast(Cast(DATAPAG AS DATETIME) - DATAVENCIMENTO AS INTEGER)
-       END                                                                                                                     AS DIAS_EM_ABERTO,
-       CASE
-         WHEN FLAN.STATUSLAN IN ( 0 Em Aberto )
-              AND Cast(Cast(Getdate() AS DATETIME) - DATAVENCIMENTO AS INTEGER) > 0 THEN Cast(( FLAN.VALORORIGINAL
-                                                                                                + FLAN.VALORACRESCIMOACORDO
-                                                                                                + FLAN.VALORJUROSACORDO - FLAN.VALORDESCONTOACORDO ) * 0.02 AS NUMERIC(10, 2))
-         ELSE 0
-       END                                                                                                                     AS MULTA,
-       CASE
-         WHEN FLAN.STATUSLAN IN ( 0 Em Aberto )
-              AND Cast(Cast(Getdate() AS DATETIME) - DATAVENCIMENTO AS INTEGER) > 0 THEN Cast(( ( FLAN.VALORORIGINAL
-                                                                                                  + FLAN.VALORACRESCIMOACORDO
-                                                                                                  + FLAN.VALORJUROSACORDO - FLAN.VALORDESCONTOACORDO ) * ( 0.01 / 30 ) ) * Cast(Cast(Getdate() AS DATETIME) - DATAVENCIMENTO AS INTEGER) AS NUMERIC(10, 2))
-         ELSE 0
-       END                                                                                                                     AS JUROS,
-       CASE
-         WHEN FLAN.STATUSLAN IN ( 0 Em Aberto*)
-              AND Cast(Cast(Getdate() AS DATETIME) - DATAVENCIMENTO AS INTEGER) > 0 THEN Cast(( FLAN.VALORORIGINAL
-                                                                                                + FLAN.VALORACRESCIMOACORDO
-                                                                                                + FLAN.VALORJUROSACORDO - FLAN.VALORDESCONTOACORDO ) + ( ( ( FLAN.VALORORIGINAL
-                                                                                                                                                             + FLAN.VALORACRESCIMOACORDO
-                                                                                                                                                             + FLAN.VALORJUROSACORDO - FLAN.VALORDESCONTOACORDO ) * ( 0.01 / 30 ) ) * Cast(Cast(Getdate() AS DATETIME) - DATAVENCIMENTO AS INTEGER) ) + ( FLAN.VALORORIGINAL * 0.02 ) AS NUMERIC(10, 2))
-         ELSE Cast(( FLAN.VALORORIGINAL
-                     + FLAN.VALORACRESCIMOACORDO
-                     + FLAN.VALORJUROSACORDO - FLAN.VALORDESCONTOACORDO ) - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) AS NUMERIC(10, 2))
-       END                                                                                                                     AS TOTAL_EM_ABERTO,
-       Cast(( FLAN.VALORORIGINAL
-              + FLAN.VALORACRESCIMOACORDO
-              + FLAN.VALORJUROSACORDO - FLAN.VALORDESCONTOACORDO ) - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) AS NUMERIC(10, 2)) AS TOTAL_EM_ABERTO_COM_DESC,
-       CASE
-         WHEN PPESSOA.NOMESOCIAL IS NOT NULL THEN PPESSOA.NOMESOCIAL + ' (Nome social: '
-                                                  + PPESSOA.NOME + ')'
-         ELSE PPESSOA.NOME
-       END                                                                                                                     AS NOMEALUNO,
-       FCFO.NOME                                                                                                               AS NOMESACADO,
-       SSERVICO.NOME                                                                                                           AS NOME_SERVICO,*/
-       Ltrim(Rtrim(PPESSOA.CODIGO))                                                                                            AS ALUNO_ID,
+SELECT 
+		VALORES.VALORLIQUIDO,
+		VALORES.VALORATUALIZADO,
+
+        Ltrim(Rtrim(PPESSOA.CODIGO))  AS ALUNO_ID,
        (
     SELECT 
         'Pendência de Pagamento' AS titulo,
@@ -61,41 +17,10 @@ SELECT /*( FLAN.VALORDESCONTO + FLAN.VALOROP3 )                                 
                 '<p style="margin: 0;"><strong>Detalhes da Fatura:</strong></p>' +
                 '<ul style="margin-top: 10px; padding-left: 20px;">' +
                     '<li>Valor Original: <s> R$ ' + 
-                        CAST(
-					        CASE
-					            WHEN FLAN.STATUSLAN = 0  -- corrigido aqui
-					                 AND CAST(GETDATE() - DATAVENCIMENTO AS INT) > 0 
-					            THEN CAST(
-					                (FLAN.VALORORIGINAL +
-					                 FLAN.VALORACRESCIMOACORDO +
-					                 FLAN.VALORJUROSACORDO -
-					                 FLAN.VALORDESCONTOACORDO) 
-					                +
-					                (
-					                    (
-					                        (FLAN.VALORORIGINAL +
-					                         FLAN.VALORACRESCIMOACORDO +
-					                         FLAN.VALORJUROSACORDO -
-					                         FLAN.VALORDESCONTOACORDO
-					                        ) * (0.01 / 30)
-					                    ) * CAST(GETDATE() - DATAVENCIMENTO AS INT)
-					                )
-					                +
-					                (FLAN.VALORORIGINAL * 0.02)
-					            AS NUMERIC(10, 2))
-					            ELSE CAST(
-					                (FLAN.VALORORIGINAL +
-					                 FLAN.VALORACRESCIMOACORDO +
-					                 FLAN.VALORJUROSACORDO -
-					                 FLAN.VALORDESCONTOACORDO -
-					                 FLAN.VALORDESCONTO -
-					                 FLAN.VALOROP3)
-					            AS NUMERIC(10, 2))
-					        END 
-					    AS VARCHAR(20)) +  
+                        CONVERT(VARCHAR(20), REPLACE(VALORES.VALORLIQUIDO, '.',','))  +  
 					'</s></li>'+
 					'<li>Valor Atualizado: <u>' + 
-					    CAST((FLAN.VALORORIGINAL - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 )) AS VARCHAR(50))+
+					    CONVERT(VARCHAR(20), REPLACE(VALORES.VALORATUALIZADO, '.',','))+
 					'</u></li>'+
                     '<li>Status: <em>Aguardando Pagamento</em></li>' +
                 '</ul>' +
@@ -183,6 +108,42 @@ FROM   SCONTRATO (NOLOCK)
                     WHEN 12 THEN 'dezembro'
                 END AS MES_EXTENSO
 ) MES
+        CROSS APPLY (
+            SELECT
+                CAST(
+                    CASE
+                        WHEN FLAN.STATUSLAN = 0 
+                        AND CAST(GETDATE() - FLAN.DATAVENCIMENTO AS INT) > 0 
+                        THEN 
+                            (FLAN.VALORORIGINAL +
+                            FLAN.VALORACRESCIMOACORDO +
+                            FLAN.VALORJUROSACORDO -
+                            FLAN.VALORDESCONTOACORDO)
+                            +
+                            (
+                                (
+                                    (FLAN.VALORORIGINAL +
+                                    FLAN.VALORACRESCIMOACORDO +
+                                    FLAN.VALORJUROSACORDO -
+                                    FLAN.VALORDESCONTOACORDO) * (0.01 / 30)
+                                ) * CAST(GETDATE() - FLAN.DATAVENCIMENTO AS INT)
+                            )
+                            +
+                            (FLAN.VALORORIGINAL * 0.02)
+                        ELSE 
+                            (FLAN.VALORORIGINAL +
+                            FLAN.VALORACRESCIMOACORDO +
+                            FLAN.VALORJUROSACORDO -
+                            FLAN.VALORDESCONTOACORDO -
+                            FLAN.VALORDESCONTO -
+                            FLAN.VALOROP3)
+                    END
+                AS NUMERIC(10,2)) AS VALORLIQUIDO,
+
+                CAST(
+                    (FLAN.VALORORIGINAL - (FLAN.VALORDESCONTO + FLAN.VALOROP3))
+                AS NUMERIC(10,2)) AS VALORATUALIZADO
+) VALORES
 WHERE  FLAN.PAGREC = 1
        AND flan.statuslan NOT IN ( '1', '2' )
        AND SMATRICPL.CODCOLIGADA = :$CODCOLIGADA
