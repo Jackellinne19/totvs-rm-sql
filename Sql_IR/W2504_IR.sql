@@ -6,14 +6,18 @@ FROM   (SELECT GIMAGEM.IMAGEM                                                  A
                GFILIAL.NOMEFANTASIA                                            AS FANTASIA_FILIAL,
                GFILIAL.NOME                                                    AS RAZAO_SOCIAL_FILIAL,
                GFILIAL.CGC                                                     AS CGC_FILIAL,
+               SCONTRATO.CODCOLIGADA,
+               SCONTRATO.RA,
+               SCONTRATO.IDPERLET,
+               SCONTRATO.CODCONTRATO,
                FLAN.DATAPAG,
                FLAN.DATABAIXA,
                FLAN.DATAVENCIMENTO,
                FLAN.VALORBAIXADO,
-               ( FLAN.VALORORIGINAL - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) ) AS VALOR,
-               FCFO.CGCCFO                                                     AS RESP_CPF,
-               FCFO.NOME                                                       AS RESP_NOME,
-               :P_PERIODO_LETIVO                                               AS ANO_LETIVO,
+               ( FLAN.VALORORIGINAL - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) )   AS VALOR,
+               RESP.RESP_CPF                                                     AS RESP_CPF,
+               RESP.RESP_NOME                                                    AS RESP_NOME,
+               PERIODOLETIVO.ANO_LETIVO                                          AS PERIODO_LETIVO,
                /*
                FCFO.RUA,
                FCFO.NUMERO,
@@ -69,23 +73,36 @@ FROM   (SELECT GIMAGEM.IMAGEM                                                  A
                          AND GFILIAL.CODFILIAL = FLAN.CODFILIAL
                LEFT JOIN GBANCO (NOLOCK)
                       ON FLAN.CNABBANCO = GBANCO.NUMBANCO
-               LEFT JOIN FCFO (NOLOCK)
-                      ON FLAN.CODCOLCFO = FCFO.CODCOLIGADA
-                         AND FLAN.CODCFO = FCFO.CODCFO
                LEFT JOIN SPLANOPGTO (NOLOCK)
                       ON SCONTRATO.CODCOLIGADA = SPLANOPGTO.CODCOLIGADA
                          AND SPLANOPGTO.CODPLANOPGTO = SCONTRATO.CODPLANOPGTO
                          AND scontrato.idperlet = splanopgto.idperlet
                LEFT JOIN GIMAGEM (NOLOCK)
                       ON GFILIAL.IDIMAGEM = GIMAGEM.ID
+               OUTER APPLY (
+                     SELECT 
+                            FCFO.NOME   AS RESP_NOME,
+                            FCFO.CGCCFO AS RESP_CPF
+                     FROM FCFO (NOLOCK)
+                     WHERE FLAN.CODCOLCFO = FCFO.CODCOLIGADA
+	                     AND FLAN.CODCFO    = FCFO.CODCFO
+	                     ) AS RESP
+              
+               OUTER APPLY (
+                     SELECT SPLETIVO.CODPERLET AS ANO_LETIVO
+                     FROM SPLETIVO (NOLOCK)
+                     WHERE SPLETIVO.IDPERLET = :IDPERLET1
+              ) AS PERIODOLETIVO
+          
         WHERE  FLAN.STATUSLAN <> 2
-               AND spletivo.codperlet LIKE :P_PERIODO_LETIVO
                AND FLAN.PAGREC = 1
                AND FLAN.CODAPLICACAO = 'S'
-               AND FLAN.CODCOlIGADA = :$CODCOLIGADA
-               AND scontrato.codfilial = :P_CODFILIAL
-               AND FLAN.DATABAIXA >= DATEFROMPARTS(YEAR(GETDATE()),1,1)
-               AND FLAN.DATABAIXA <= GETDATE()            
+               AND FLAN.DATABAIXA >= '2025-01-01'	   
+               AND FLAN.DATABAIXA <= '2025-12-31' 
+               AND SCONTRATO.RA = :RA3
+               AND SCONTRATO.IDPERLET = :IDPERLET1
+               AND SCONTRATO.CODCOLIGADA = :CODCOLIGADA1
+	        AND SCONTRATO.CODCONTRATO = :CODCONTRATO1
                AND ( SSERVICO.NOME LIKE '%Mensalidade%'
                       OR SSERVICO.NOME LIKE '%Global%'
                       OR SSERVICO.NOME LIKE '%Técnico%'
@@ -119,7 +136,6 @@ FROM   (SELECT GIMAGEM.IMAGEM                                                  A
                       OR SSERVICO.NOME LIKE '%Fidelidade%'
                       OR SSERVICO.NOME LIKE '%Férias%'
                       OR SSERVICO.NOME LIKE '%Livro%' )
-               AND FCFO.NOME LIKE :P_NOME_RESP
                AND ( NOT FLAN.HISTORICO LIKE 'Acordo:%'
                      AND NOT FLAN.HISTORICO LIKE 'Parcelamento:%' )
                AND ( FLAN.VALORORIGINAL - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) ) > 0) AS q
