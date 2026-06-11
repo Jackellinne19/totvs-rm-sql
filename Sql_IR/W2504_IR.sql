@@ -1,3 +1,5 @@
+
+
 SELECT q.*
 FROM   (SELECT GIMAGEM.IMAGEM                                                  AS LOGO,
                GCOLIGADA.NOMEFANTASIA                                          AS FANTASIA,
@@ -17,7 +19,7 @@ FROM   (SELECT GIMAGEM.IMAGEM                                                  A
                ( FLAN.VALORORIGINAL - ( FLAN.VALORDESCONTO + FLAN.VALOROP3 ) )   AS VALOR,
                RESP.RESP_CPF                                                     AS RESP_CPF,
                RESP.RESP_NOME                                                    AS RESP_NOME,
-               PERIODOLETIVO.ANO_LETIVO                                          AS PERIODO_LETIVO,
+               SPLETIVO.CODPERLET									   			 AS PERIODO_LETIVO,
                /*
                FCFO.RUA,
                FCFO.NUMERO,
@@ -87,12 +89,7 @@ FROM   (SELECT GIMAGEM.IMAGEM                                                  A
                      WHERE FLAN.CODCOLCFO = FCFO.CODCOLIGADA
 	                     AND FLAN.CODCFO    = FCFO.CODCFO
 	                     ) AS RESP
-              
-               OUTER APPLY (
-                     SELECT SPLETIVO.CODPERLET AS ANO_LETIVO
-                     FROM SPLETIVO (NOLOCK)
-                     WHERE SPLETIVO.IDPERLET = :IDPERLET1
-              ) AS PERIODOLETIVO
+             
           
         WHERE  FLAN.STATUSLAN <> 2
                AND FLAN.PAGREC = 1
